@@ -7,7 +7,11 @@ load_dotenv()
 
 # Fallback to SQLite if DATABASE_URL is not set
 # To use PostgreSQL, set environment variable DATABASE_URL=postgresql://user:password@localhost/attendance
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./attendance.db")
+# SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./attendance.db")
+db_url = os.getenv("DATABASE_URL", "sqlite:///./attendance.db")
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+SQLALCHEMY_DATABASE_URL = db_url
 
 connect_args = {}
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
