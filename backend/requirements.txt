@@ -9,3 +9,5 @@ python-dotenv
 ultralytics
 opencv-python-headless
 insightface
+onnxruntime
+numpy
