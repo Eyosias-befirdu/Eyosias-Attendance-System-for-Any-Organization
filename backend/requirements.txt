@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-multipart
+qrcode[pil]
+python-dotenv
+ultralytics
+opencv-python-headless
+insightface
