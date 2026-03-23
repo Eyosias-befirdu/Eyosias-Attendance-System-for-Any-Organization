@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_CLIENT_KEY || 'http://localhost:8000';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -345,7 +345,7 @@ export const LiveDashboardFeed = ({ cameraId }) => {
           const fd = new FormData();
           fd.append('file', blob, 'live_dash.jpg');
           try {
-            const r = await fetch('${API_BASE}/api/attendance/face', { method: 'POST', body: fd });
+            const r = await fetch(`${API_BASE}/api/attendance/face`, { method: 'POST', body: fd });
             const d = await r.json();
             if (d.status === 'success') {
               setLatestRecognition(d);
