@@ -6,7 +6,8 @@ pydantic
 python-multipart
 qrcode[pil]
 python-dotenv
-ultralytics
+# ultralytics removed to reduce RAM footprint on Render free tier
+
 opencv-python-headless
 insightface
 onnxruntime

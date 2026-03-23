@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './index.css';
 import { LiveDashboardFeed, CameraCaptureComponent, IPCameraStream } from './LiveCamera';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -81,9 +83,9 @@ function Dashboard() {
     const load = async () => {
       try {
         const [usersR, attendR, camsR] = await Promise.all([
-          fetch('http://localhost:8000/api/users'),
-          fetch('http://localhost:8000/api/attendance'),
-          fetch('http://localhost:8000/api/cameras'),
+          fetch('${API_BASE}/api/users'),
+          fetch('${API_BASE}/api/attendance'),
+          fetch('${API_BASE}/api/cameras'),
         ]);
         const users    = usersR.ok    ? await usersR.json()    : [];
         const logs     = attendR.ok   ? await attendR.json()   : [];
@@ -178,7 +180,7 @@ function UserRegistration() {
   const [selectedCamId, setSelectedCamId] = useState('webcam');
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/cameras')
+    fetch('${API_BASE}/api/cameras')
       .then(r => r.json())
       .then(data => setCameras(data))
       .catch(e => console.error(e));
@@ -189,7 +191,7 @@ function UserRegistration() {
     setSubmitStatus('Processing...');
     
     try {
-      const resp = await fetch('http://localhost:8000/api/users', {
+      const resp = await fetch('${API_BASE}/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -203,7 +205,7 @@ function UserRegistration() {
            setSubmitStatus('Encoding Face Topology...');
            const fd = new FormData();
            fd.append("file", photo);
-           const uploadResp = await fetch(`http://localhost:8000/api/users/embedding/${data.id}`, {
+           const uploadResp = await fetch(`${API_BASE}/api/users/embedding/${data.id}`, {
               method: 'POST',
               body: fd
            });
@@ -335,7 +337,7 @@ function CameraManagement() {
   
   const fetchCameras = async () => {
     try {
-      const resp = await fetch('http://localhost:8000/api/cameras');
+      const resp = await fetch('${API_BASE}/api/cameras');
       if (resp.ok) {
         setCameras(await resp.json());
       }
@@ -357,7 +359,7 @@ function CameraManagement() {
               stream_url: e.target.stream_url.value,
               location: e.target.location.value
           };
-          await fetch('http://localhost:8000/api/cameras', {
+          await fetch('${API_BASE}/api/cameras', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(formData)
@@ -433,7 +435,7 @@ function AttendanceLogs() {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const resp = await fetch('http://localhost:8000/api/attendance');
+        const resp = await fetch('${API_BASE}/api/attendance');
         if (resp.ok) setLogs(await resp.json());
       } catch (e) { console.error(e); }
     };
@@ -523,7 +525,7 @@ function FaceVerification() {
     fd.append("file", e.target.files[0]);
     
     try {
-      const resp = await fetch('http://localhost:8000/api/attendance/face', {
+      const resp = await fetch('${API_BASE}/api/attendance/face', {
         method: 'POST',
         body: fd
       });
@@ -578,7 +580,7 @@ function RegisteredPersons() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const resp = await fetch('http://localhost:8000/api/users');
+        const resp = await fetch('${API_BASE}/api/users');
         if (resp.ok) setUsers(await resp.json());
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
@@ -845,7 +847,7 @@ function PersonnelPortal() {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`http://localhost:8000/api/users/lookup/${idValue}`);
+      const resp = await fetch(`${API_BASE}/api/users/lookup/${idValue}`);
       if (resp.ok) {
         setUserData(await resp.json());
       } else {
@@ -949,7 +951,7 @@ function PersonnelPortal() {
                const fd = new FormData();
                fd.append("file", file);
                try {
-                 const res = await fetch('http://localhost:8000/api/attendance/face', { method: 'POST', body: fd });
+                 const res = await fetch('${API_BASE}/api/attendance/face', { method: 'POST', body: fd });
                  const data = await res.json();
                  if (data.status === 'success' && data.matches.length > 0) {
                    // Automatically login with the first matched face for portal access

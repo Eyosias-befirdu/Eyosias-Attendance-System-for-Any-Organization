@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // KEY BUG FIX (applies to all 3 components below):
 //   When a <video> element is inside a conditional branch, its ref is null
@@ -21,7 +24,7 @@ export const IPCameraStream = ({ camera }) => {
   const canvasRef = useRef(null);
   const [webcamStream, setWebcamStream] = useState(null);
 
-  const streamUrl = `http://localhost:8000/api/cameras/${camera.id}/stream?k=${streamKey}`;
+  const streamUrl = `${API_BASE}/api/cameras/${camera.id}/stream?k=${streamKey}`;
 
   // ✅ FIX: assign srcObject in effect, AFTER React renders <video>
   useEffect(() => {
@@ -59,7 +62,7 @@ export const IPCameraStream = ({ camera }) => {
       const fd = new FormData();
       fd.append('file', blob, 'frame.jpg');
       try {
-        const r = await fetch(`http://localhost:8000/api/attendance/face?camera_id=${camera.id}`, { method: 'POST', body: fd });
+        const r = await fetch(`${API_BASE}/api/attendance/face?camera_id=${camera.id}`, { method: 'POST', body: fd });
         const d = await r.json();
         setRecognition(d);
         if (d.status === 'success') setTimeout(() => setRecognition(null), 5000);
@@ -72,7 +75,7 @@ export const IPCameraStream = ({ camera }) => {
     if (scanning) return;
     setScanning(true);
     try {
-      const r = await fetch(`http://localhost:8000/api/cameras/${camera.id}/snapshot`, { method: 'POST' });
+      const r = await fetch(`${API_BASE}/api/cameras/${camera.id}/snapshot`, { method: 'POST' });
       const d = await r.json();
       setRecognition(d);
       if (d.status === 'success') setTimeout(() => setRecognition(null), 5000);
@@ -226,7 +229,7 @@ export const CameraCaptureComponent = ({ cameraId, onCapture, buttonText }) => {
         // Simpler: fetch the current frame from the MJPEG stream via a temporary img
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.src = `http://localhost:8000/api/cameras/${cameraId}/stream?k=${Date.now()}`;
+        img.src = `${API_BASE}/api/cameras/${cameraId}/stream?k=${Date.now()}`;
         img.onload = () => {
           const c = canvasRef.current;
           c.width = img.width;
@@ -245,7 +248,7 @@ export const CameraCaptureComponent = ({ cameraId, onCapture, buttonText }) => {
     }
   };
 
-  const streamUrl = cameraId ? `http://localhost:8000/api/cameras/${cameraId}/stream?k=${streamKey}` : null;
+  const streamUrl = cameraId ? `${API_BASE}/api/cameras/${cameraId}/stream?k=${streamKey}` : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
@@ -342,7 +345,7 @@ export const LiveDashboardFeed = ({ cameraId }) => {
           const fd = new FormData();
           fd.append('file', blob, 'live_dash.jpg');
           try {
-            const r = await fetch('http://localhost:8000/api/attendance/face', { method: 'POST', body: fd });
+            const r = await fetch('${API_BASE}/api/attendance/face', { method: 'POST', body: fd });
             const d = await r.json();
             if (d.status === 'success') {
               setLatestRecognition(d);
@@ -353,7 +356,7 @@ export const LiveDashboardFeed = ({ cameraId }) => {
       } else {
         // IP Camera mode
         try {
-          const r = await fetch(`http://localhost:8000/api/cameras/${cameraId}/snapshot`, { method: 'POST' });
+          const r = await fetch(`${API_BASE}/api/cameras/${cameraId}/snapshot`, { method: 'POST' });
           const d = await r.json();
           if (d.status === 'success') {
             setLatestRecognition(d);
@@ -367,7 +370,7 @@ export const LiveDashboardFeed = ({ cameraId }) => {
     return () => clearInterval(interval);
   }, [cameraId, webcamStream]);
 
-  const streamUrl = cameraId ? `http://localhost:8000/api/cameras/${cameraId}/stream?k=${streamKey}` : null;
+  const streamUrl = cameraId ? `${API_BASE}/api/cameras/${cameraId}/stream?k=${streamKey}` : null;
 
   return (
     <div className="glass-panel" style={{ padding: '1.5rem', position: 'relative', overflow: 'hidden', background: 'rgba(5, 5, 15, 0.4)' }}>

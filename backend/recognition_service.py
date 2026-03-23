@@ -8,24 +8,24 @@ class FaceRecognitionService:
         self.yolo_model = None    # Optional YOLO override for detection
 
         # ── 1. Try InsightFace full pipeline (det + rec) ──────────────────────
+        # ── 1. Try InsightFace PIPELINE (SMALL version for memory-constrained environments) ──
         try:
             from insightface.app import FaceAnalysis
+            # Switch 'buffalo_l' to 'buffalo_s' (Small - significantly less RAM)
             self.insight_app = FaceAnalysis(
-                name='buffalo_l',
+                name='buffalo_s',
                 allowed_modules=['detection', 'recognition']
             )
             self.insight_app.prepare(ctx_id=-1, det_size=(640, 640))  # ctx_id=-1 = CPU
-            print("✅ InsightFace (buffalo_l) loaded successfully.")
+            print("✅ InsightFace (buffalo_s) loaded successfully.")
         except Exception as e:
             print(f"⚠️  Could not load InsightFace: {e}")
 
-        # ── 2. Try YOLO face model (optional overlay) ─────────────────────────
-        try:
-            from ultralytics import YOLO
-            self.yolo_model = YOLO('yolo26.face.pt')
-            print("✅ YOLO face model loaded.")
-        except Exception as e:
-            print(f"⚠️  YOLO model unavailable: {e}")
+        # ── 2. Disable YOLO (Memory Heavy) ──────────────────────────────────
+        # ultralytics/PyTorch consumes 300MB+ RAM. On Render (512MB), we stick to InsightFace.
+        self.yolo_model = None
+        print("💡 YOLO face model disabled to prevent Out-Of-Memory on Render.")
+
 
         # ── 3. OpenCV DNN fallback detector ──────────────────────────────────
         # Ships with OpenCV – no extra files needed.
