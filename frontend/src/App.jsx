@@ -4,6 +4,11 @@ import { LiveDashboardFeed, CameraCaptureComponent, IPCameraStream } from './Liv
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  useEffect(() => {
+    document.body.className = isDarkMode ? 'dark-theme' : 'light-theme';
+  }, [isDarkMode]);
 
   return (
     <div className="app-container">
@@ -29,6 +34,10 @@ function App() {
           <li className={`nav-item ${activeTab === 'persons' ? 'active' : ''}`} onClick={() => setActiveTab('persons')}>
             👤 Registered Persons
           </li>
+          <div style={{ padding: '1rem 0 0.5rem 1rem', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Personnel Services</div>
+          <li className={`nav-item ${activeTab === 'portal' ? 'active' : ''}`} onClick={() => setActiveTab('portal')}>
+            🏢 My Personal Portal
+          </li>
         </ul>
       </nav>
 
@@ -38,7 +47,14 @@ function App() {
           <h1 className="page-title gradient-text">
             Eyosias Attendance System for Any Organization
           </h1>
-          <div className="user-profile">
+          <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button 
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'var(--text-main)', transition: 'all 0.3s' }}
+              title="Toggle Neural Clarity (Light/Dark Mode)"
+            >
+              {isDarkMode ? '🌙' : '☀️'}
+            </button>
             <span className="badge primary">System Admin</span>
           </div>
         </header>
@@ -49,6 +65,7 @@ function App() {
         {activeTab === 'logs' && <AttendanceLogs />}
         {activeTab === 'verification' && <FaceVerification />}
         {activeTab === 'persons' && <RegisteredPersons />}
+        {activeTab === 'portal' && <PersonnelPortal />}
       </main>
     </div>
   );
@@ -425,8 +442,36 @@ function AttendanceLogs() {
     return () => clearInterval(interval);
   }, []);
 
+  const exportToCSV = () => {
+    const headers = ["Time", "Personnel Identity", "Department", "Captured At", "Method"];
+    const csvRows = logs.map(log => [
+      new Date(log.timestamp).toLocaleString(),
+      log.user_name,
+      log.department,
+      log.location,
+      log.method
+    ].join(","));
+    
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `attendance_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="glass-panel table-container">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button onClick={exportToCSV} className="badge primary" style={{ cursor: 'pointer', border: 'none', padding: '0.8rem 1.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          📊 Export Full Dataset (CSV)
+        </button>
+      </div>
+      <div className="glass-panel table-container">
       <table>
         <thead>
           <tr>
@@ -459,7 +504,8 @@ function AttendanceLogs() {
         </tbody>
       </table>
     </div>
-  );
+  </div>
+);
 }
 
 
@@ -583,6 +629,16 @@ function RegisteredPersons() {
             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary-color)'}
             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
           >
+            {/* Quick Print Button */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                generateIDCard(user);
+              }}
+              style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(59, 130, 246, 0.2)', border: 'none', borderRadius: '4px', color: 'var(--primary-color)', fontSize: '0.7rem', padding: '4px 8px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 }}
+            >
+              🖨️ ID CARD
+            </button>
             {/* Accent line */}
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, var(--primary-color), var(--accent-color))' }} />
 
@@ -707,6 +763,227 @@ function RegisteredPersons() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Identity Card Rendering Engine ───────────────────────────────────────────
+function generateIDCard(user) {
+  const win = window.open('', '_blank');
+  const primaryColor = '#3b82f6';
+  
+  win.document.write(`
+    <html>
+      <head>
+        <title>Identity Card - ${user.full_name}</title>
+        <style>
+          body { font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f0f2f5; }
+          .id-card { width: 350px; height: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
+          .header { height: 120px; background: linear-gradient(135deg, ${primaryColor}, #8b5cf6); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+          .photo-area { width: 130px; height: 130px; border-radius: 50%; border: 5px solid white; background: #eee; position: absolute; top: 55px; left: 110px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; color: ${primaryColor}; }
+          .content { margin-top: 80px; padding: 20px; text-align: center; }
+          .name { font-size: 1.5rem; font-weight: 800; color: #1a1a2e; margin: 10px 0 5px 0; }
+          .id-number { font-size: 0.9rem; color: ${primaryColor}; font-weight: bold; margin-bottom: 20px; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; background: #f9fafb; padding: 15px; border-radius: 8px; margin-top: 10px; }
+          .info-item label { font-size: 0.7rem; text-transform: uppercase; color: #6b7280; font-weight: bold; }
+          .info-item p { font-size: 0.85rem; color: #111827; margin: 2px 0 0 0; font-weight: bold; }
+          .footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 15px; background: #f3f4f6; display: flex; align-items: center; gap: 15px; }
+          .qr-token { width: 60px; height: 60px; }
+          .sys-brand { font-size: 0.65rem; color: #9ca3af; flex: 1; }
+          @media print { body { background: white; } .id-card { box-shadow: none; border: 1px solid #ddd; } }
+        </style>
+      </head>
+      <body>
+        <div class="id-card">
+          <div class="header">
+            <h2 style="margin:0; font-size:1.1rem">EYOSIAS SYSTEM</h2>
+            <p style="margin:0; font-size:0.6rem; opacity:0.8">GENERIC IDENTITY CLEARANCE</p>
+          </div>
+          <div class="photo-area">${user.full_name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}</div>
+          <div class="content">
+            <div class="name">${user.full_name}</div>
+            <div class="id-number">${user.unique_id}</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Department</label>
+                <p>${user.department}</p>
+              </div>
+              <div class="info-item">
+                <label>Role</label>
+                <p>${user.role}</p>
+              </div>
+              <div class="info-item">
+                <label>Authorized</label>
+                <p>${new Date().getFullYear()}</p>
+              </div>
+              <div class="info-item">
+                <label>Security</label>
+                <p>LEVEL 4</p>
+              </div>
+            </div>
+          </div>
+          <div class="footer">
+            <div class="sys-brand">Automated Verification Token<br />Neural ID Verified System</div>
+            ${user.qr_code_data ? `<img class="qr-token" src="data:image/png;base64,${user.qr_code_data}" />` : ''}
+          </div>
+        </div>
+        <script>window.onload = () => { setTimeout(() => { window.print(); }, 500); }</script>
+      </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+// ── Personnel Portal Component ──────────────────────────────────────────────
+function PersonnelPortal() {
+  const [userData, setUserData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [idInput, setIdInput] = useState('');
+
+  const handleLookup = async (idValue) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const resp = await fetch(`http://localhost:8000/api/users/lookup/${idValue}`);
+      if (resp.ok) {
+        setUserData(await resp.json());
+      } else {
+        const err = await resp.json();
+        setError(err.detail || 'Identity lookup failed.');
+      }
+    } catch (e) {
+      setError('Connection refused. Is the Neural Hub online?');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logoutPortal = () => {
+    setUserData(null);
+    setIdInput('');
+  };
+
+  if (userData) {
+    const { user, logs } = userData;
+    return (
+      <div className="portal-dashboard">
+        {/* User Profile Header */}
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(0,0,0,0))' }}>
+          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+            <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', color: 'white', fontWeight: 'bold' }}>
+              {user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Welcome, {user.full_name}</h2>
+              <p style={{ color: 'var(--text-muted)', margin: '0.2rem 0' }}>{user.role} • {user.department}</p>
+              <span className="badge success">Verified Personnel</span>
+            </div>
+          </div>
+          <button onClick={logoutPortal} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid #ef4444', padding: '0.6rem 1.2rem', cursor: 'pointer', borderRadius: '8px' }}>
+            Logout 🔒
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '1.5rem' }}>
+          {/* Recent Activity */}
+          <div className="glass-panel" style={{ padding: '1.5rem' }}>
+            <h3 style={{ marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>🕒 Neural Scan History ({logs.length})</h3>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Method</th>
+                    <th>Node</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((L, i) => (
+                    <tr key={i}>
+                      <td>{new Date(L.timestamp).toLocaleString()}</td>
+                      <td><span className="badge primary">{L.method}</span></td>
+                      <td>{L.location || 'Local Terminal'}</td>
+                    </tr>
+                  ))}
+                  {logs.length === 0 && <tr><td colSpan="3" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No attendance history found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Quick Info & Card */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+             <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-muted)' }}>IDENTITY TOKEN</h4>
+                <div style={{ textAlign: 'center' }}>
+                  {user.qr_code_data ? (
+                    <img src={`data:image/png;base64,${user.qr_code_data}`} style={{ width: '100%', maxWidth: '200px', borderRadius: '12px', border: '8px solid white' }} alt="Token" />
+                  ) : <p>Generating Token...</p>}
+                  <p style={{ fontSize: '0.75rem', marginTop: '1rem', color: 'var(--text-muted)' }}>Scan this code at automated gateways for terminal access.</p>
+                </div>
+             </div>
+             <button onClick={() => generateIDCard(user)} className="badge primary" style={{ width: '100%', padding: '1.2rem', cursor: 'pointer', border: 'none', background: 'var(--primary-color)', color: 'white', fontWeight: 'bold' }}>
+               🖨️ Open Digital ID Card
+             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-panel" style={{ padding: '3rem', maxWidth: '800px', margin: '2rem auto', textAlign: 'center' }}>
+      <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }} className="gradient-text">Personnel Self-Service Hub</h2>
+      <p style={{ color: 'var(--text-muted)', marginBottom: '3rem' }}>Securely access your records using your Neural ID or manual credentials.</p>
+
+      {error && <p style={{ color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>⚠️ {error}</p>}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 1fr', gap: '3rem', alignItems: 'start' }}>
+        {/* Face Access */}
+        <div style={{ borderRight: '1px solid var(--border-color)', paddingRight: '3rem' }}>
+           <h3 style={{ marginBottom: '1.5rem' }}>Neural Face Scan</h3>
+           <CameraCaptureComponent 
+             onCapture={async (file) => {
+               setLoading(true);
+               const fd = new FormData();
+               fd.append("file", file);
+               try {
+                 const res = await fetch('http://localhost:8000/api/attendance/face', { method: 'POST', body: fd });
+                 const data = await res.json();
+                 if (data.status === 'success' && data.matches.length > 0) {
+                   // Automatically login with the first matched face for portal access
+                   handleLookup(data.matches[0].unique_id);
+                 } else {
+                   setError("Face not recognized in neural network registry.");
+                 }
+               } catch(e) { setError("Camera authentication error."); }
+               finally { setLoading(false); }
+             }}
+             buttonText="Authenticate via Biometry"
+           />
+        </div>
+
+        {/* ID Access */}
+        <div style={{ textAlign: 'left' }}>
+           <h3 style={{ marginBottom: '1.5rem' }}>Manual Access</h3>
+           <label style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Neural Unique Identity (e.g. USER-XXXX)</label>
+           <input 
+             type="text" 
+             placeholder="ENTER YOUR UNIQUE ID" 
+             value={idInput}
+             onChange={e => setIdInput(e.target.value.toUpperCase())}
+             style={{ fontSize: '1.2rem', padding: '1rem', letterSpacing: '2px', fontWeight: 'bold' }}
+           />
+           <button 
+             onClick={() => handleLookup(idInput)} 
+             disabled={loading || !idInput}
+             style={{ width: '100%', marginTop: '1.5rem', padding: '1.2rem', fontSize: '1.1rem' }}
+           >
+             {loading ? 'Decrypting Records...' : 'Access My Profile →'}
+           </button>
+        </div>
+      </div>
     </div>
   );
 }

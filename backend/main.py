@@ -106,28 +106,57 @@ async def mark_attendance_face(
     if not results:
         return {"status": "error", "message": "No face detected"}
         
-    emb = results[0]['embedding']
-    
-    # Simple search
     all_embs = db.query(models.FaceEmbedding).all()
-    best_match = None
-    best_sim = -1
-    
-    for db_emb in all_embs:
-        db_emb_array = np.array(json.loads(db_emb.embedding_data))
-        is_match, sim = recognition_service.compare_embeddings(emb, db_emb_array)
-        if is_match and sim > best_sim:
-            best_match = db_emb.user_id
-            best_sim = sim
-            
-    if best_match:
-        user = db.query(models.User).filter(models.User.id == best_match).first()
-        log = models.AttendanceLog(user_id=user.id, method="Face", camera_id=camera_id)
-        db.add(log)
+    successful_matches = []
+    seen_user_ids = set()
+
+    # Process every detected face in the frame
+    for face_data in results:
+        emb = face_data['embedding']
+        best_match_id = None
+        best_sim = -1
+        
+        for db_emb in all_embs:
+            db_emb_array = np.array(json.loads(db_emb.embedding_data))
+            is_match, sim = recognition_service.compare_embeddings(emb, db_emb_array)
+            if is_match and sim > best_sim:
+                best_match_id = db_emb.user_id
+                best_sim = sim
+        
+        if best_match_id and best_match_id not in seen_user_ids:
+            user = db.query(models.User).filter(models.User.id == best_match_id).first()
+            if user:
+                log = models.AttendanceLog(user_id=user.id, method="Face", camera_id=camera_id)
+                db.add(log)
+                successful_matches.append({
+                    "user": user.full_name, 
+                    "unique_id": user.unique_id,
+                    "similarity": float(best_sim)
+                })
+                seen_user_ids.add(best_match_id)
+
+    if successful_matches:
         db.commit()
-        return {"status": "success", "user": user.full_name, "similarity": float(best_sim)}
+        return {
+            "status": "success", 
+            "matches": successful_matches, 
+            "count": len(successful_matches)
+        }
     
-    return {"status": "error", "message": "Face not recognized"}
+    return {"status": "error", "message": "No known faces recognized"}
+
+@app.get("/api/users/lookup/{unique_id}")
+def lookup_user_portal(unique_id: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.unique_id == unique_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Identity not found in neural database.")
+    
+    logs = db.query(models.AttendanceLog).filter(models.AttendanceLog.user_id == user.id).order_by(models.AttendanceLog.timestamp.desc()).all()
+    
+    return {
+        "user": user,
+        "logs": logs
+    }
 
 @app.post("/api/cameras", response_model=schemas.CameraResponse)
 def register_camera(camera: schemas.CameraCreate, db: Session = Depends(get_db)):

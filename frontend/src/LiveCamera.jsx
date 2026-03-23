@@ -409,16 +409,18 @@ export const LiveDashboardFeed = ({ cameraId }) => {
         </div>
 
         {latestRecognition && (
-          <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', background: 'rgba(16,185,129,0.92)', padding: '1rem', borderRadius: '10px', color: 'white', backdropFilter: 'blur(8px)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.8 }}>Identity Verified</span>
-                <h4 style={{ margin: '2px 0 0 0', fontSize: '1.2rem' }}>{latestRecognition.user}</h4>
+          <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', background: 'rgba(16,185,129,0.92)', padding: '1rem', borderRadius: '10px', color: 'white', backdropFilter: 'blur(8px)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', maxHeight: '180px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 'bold' }}>Neural IDs Verified ({latestRecognition.count})</span>
+                <span style={{ fontSize: '0.7rem' }}>Matched AI Hub</span>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.8 }}>Match</span>
-                <h4 style={{ margin: '2px 0 0 0' }}>{(latestRecognition.similarity * 100).toFixed(1)}%</h4>
-              </div>
+              {latestRecognition.matches.map((match, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem' }}>✅ {match.user}</h4>
+                  <span style={{ fontSize: '0.85rem' }}>{(match.similarity * 100).toFixed(1)}%</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
