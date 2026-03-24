@@ -11,13 +11,12 @@ class FaceRecognitionService:
         # ── 1. Try InsightFace PIPELINE (SMALL version for memory-constrained environments) ──
         try:
             from insightface.app import FaceAnalysis
-            # Switch 'buffalo_l' to 'buffalo_s' (Small - significantly less RAM)
             self.insight_app = FaceAnalysis(
-                name='buffalo_s',
+                name='buffalo_l',
                 allowed_modules=['detection', 'recognition']
             )
             self.insight_app.prepare(ctx_id=-1, det_size=(640, 640))  # ctx_id=-1 = CPU
-            print("✅ InsightFace (buffalo_s) loaded successfully.")
+            print("✅ InsightFace (buffalo_l) loaded successfully.")
         except Exception as e:
             print(f"⚠️  Could not load InsightFace: {e}")
 
