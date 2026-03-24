@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_CLIENT_KEY || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.CLIENT_KEY || import.meta.env.VITE_CLIENT_KEY || 'http://localhost:8000';
 
 
 // ─────────────────────────────────────────────────────────────────────────────

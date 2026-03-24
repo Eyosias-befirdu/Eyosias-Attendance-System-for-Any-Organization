@@ -9,7 +9,7 @@ ENV PATH="/home/user/.local/bin:${PATH}"
 
 # Install system dependencies for OpenCV and InsightFace
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -33,5 +33,4 @@ COPY --chown=user . .
 EXPOSE 7860
 
 # Run the FastAPI application using uvicorn
-# We set the port to 7860 for Hugging Face compatibility
 CMD ["python", "main.py"]

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './index.css';
 import { LiveDashboardFeed, CameraCaptureComponent, IPCameraStream } from './LiveCamera';
 
-const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_CLIENT_KEY || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.CLIENT_KEY || import.meta.env.VITE_CLIENT_KEY || 'http://localhost:8000';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
